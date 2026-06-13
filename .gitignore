@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Dados gerados em runtime
+rppg_*.csv
+preview_monitor.png
+
+# Sistema
+.DS_Store
