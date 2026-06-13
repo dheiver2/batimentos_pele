@@ -11,16 +11,24 @@ numa interface no estilo de **monitor de sinais vitais hospitalar**.
 
 ## Recursos
 
-- **Algoritmo POS** — projeta o RGB num plano ortogonal ao tom de pele, cancelando
-  ruído de movimento e iluminação (muito mais robusto que a média do canal verde).
-- **Máscara de pele (YCrCb)** — média apenas sobre pixels de pele dentro das ROIs.
+### Precisão & validação
+- **Ensemble de algoritmos** — **POS** (Wang 2017) + **CHROM** (de Haan 2013) +
+  canal verde, fundidos por peso de SNR.
+- **Validação cruzada** — concordância entre os dois métodos de maior SNR.
+- **Verificação independente** — HR por **autocorrelação** confrontado com a FFT.
+- **Interpolação parabólica do pico** — precisão de BPM abaixo da resolução do bin.
+- **Máscara de pele (YCrCb)** — média só sobre pixels de pele dentro das ROIs.
 - **Múltiplas ROIs** — testa + duas bochechas, combinadas.
 - **Reamostragem uniforme** — corrige a amostragem irregular da webcam antes da FFT.
-- **Suavização** — mediana das estimativas recentes + rastreamento da face (EMA).
-- **Métricas** — BPM, qualidade do sinal (SQI via SNR em dB) e HRV (SDNN).
-- **Interface tipo monitor** — traçado PLETH sobre grade de ECG, tendência de BPM,
-  coração que pisca no ritmo, relógio e alarme de sinal.
-- **Gravação CSV** — tecla `r` grava `t, bpm, snr, conf, hrv` para análise posterior.
+- **Rejeição de movimento** — descarta frames com salto brusco da ROI.
+- **Suavização com rejeição de outliers** — mediana temporal + rastreamento da face (EMA).
+- **SQI composto** — combina SNR + concordância de métodos + concordância FFT/autocorr.
+
+### Interface (UI/UX comercial)
+- Dashboard "VitalScan": cartões arredondados, anel de progresso da FC, coração
+  pulsante, barra de qualidade, sparkline de tendência e painel de validação.
+- **Métricas exibidas** — BPM, SQI (%), HRV (SDNN, ms) e status de validação.
+- **Gravação CSV** — tecla `r` grava `t, bpm, snr, sqi, hrv, bpm_autocorr`.
 
 ## Instalação
 
