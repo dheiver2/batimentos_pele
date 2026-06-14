@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import (QFrame, QHBoxLayout, QLabel, QSizePolicy,
 
 from . import theme
 
-pg.setConfigOptions(antialias=True, background=theme.PANEL, foreground=theme.MUT)
+pg.setConfigOptions(antialias=True, background=theme.BG, foreground=theme.FAINT)
 
 
 def _qcolor(hexstr: str) -> QColor:
@@ -98,15 +98,15 @@ class HeartGauge(QWidget):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         w, h = self.width(), self.height()
-        side = min(w, h) - 24
+        side = min(w, h) - 30
         cx, cy = w / 2, h / 2
         rect = QRectF(cx - side / 2, cy - side / 2, side, side)
-        esp = max(10, side * 0.07)
+        esp = max(2.0, side * 0.018)          # anel fino, elegante
 
         cor = _qcolor(theme.ACC if self._ok else theme.MUT)
 
-        # trilho
-        pen = QPen(_qcolor(theme.PANEL_HI), esp, cap=Qt.PenCapStyle.RoundCap)
+        # trilho discreto
+        pen = QPen(_qcolor(theme.LINE), esp, cap=Qt.PenCapStyle.RoundCap)
         p.setPen(pen)
         p.drawArc(rect, 0, 360 * 16)
 
@@ -116,24 +116,28 @@ class HeartGauge(QWidget):
             p.setPen(pen)
             p.drawArc(rect, 90 * 16, int(-self._frac * 360 * 16))
 
-        # coração pulsante
-        scale = 1.0 + 0.18 * self._pulse
-        self._draw_heart(p, cx, cy - side * 0.18, side * 0.10 * scale, cor)
-
-        # valor
-        p.setPen(cor)
+        # valor — número herói, peso leve
+        p.setPen(_qcolor(theme.TXT if self._ok else theme.MUT))
         f = QFont()
-        f.setPointSizeF(side * 0.20)
-        f.setBold(True)
+        f.setPointSizeF(side * 0.26)
+        f.setWeight(QFont.Weight.Light)
         p.setFont(f)
         valor = f"{self._bpm:.0f}" if self._ok else "--"
-        p.drawText(QRectF(cx - side / 2, cy - side * 0.04, side, side * 0.34),
-                   Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop, valor)
+        p.drawText(QRectF(cx - side / 2, cy - side * 0.20, side, side * 0.42),
+                   Qt.AlignmentFlag.AlignCenter, valor)
+
+        # coração pulsante + "bpm" na base
+        scale = 1.0 + 0.22 * self._pulse
+        self._draw_heart(p, cx - side * 0.07, cy + side * 0.20,
+                         side * 0.035 * scale, cor)
         p.setPen(_qcolor(theme.MUT))
-        f2 = QFont(); f2.setPointSizeF(side * 0.055)
+        f2 = QFont(); f2.setPointSizeF(side * 0.05)
+        f2.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, 2.0)
         p.setFont(f2)
-        p.drawText(QRectF(cx - side / 2, cy + side * 0.22, side, side * 0.12),
-                   Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop, "bpm")
+        p.drawText(QRectF(cx - side / 2 + side * 0.10, cy + side * 0.155,
+                          side, side * 0.10),
+                   Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                   "BPM")
         p.end()
 
     @staticmethod
@@ -182,7 +186,7 @@ class ProgressBar(QWidget):
         super().__init__()
         self._cor = cor
         self._frac = 0.0
-        self.setFixedHeight(8)
+        self.setFixedHeight(3)
 
     def set_frac(self, v):
         self._frac = float(np.clip(v, 0, 1))
@@ -193,10 +197,10 @@ class ProgressBar(QWidget):
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         r = self.rect()
         p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(_qcolor(theme.PANEL_HI))
-        p.drawRoundedRect(QRectF(r), 4, 4)
+        p.setBrush(_qcolor(theme.LINE))
+        p.drawRoundedRect(QRectF(r), 1.5, 1.5)
         p.setBrush(_qcolor(self._cor))
-        p.drawRoundedRect(QRectF(0, 0, r.width() * self._frac, r.height()), 4, 4)
+        p.drawRoundedRect(QRectF(0, 0, r.width() * self._frac, r.height()), 1.5, 1.5)
         p.end()
 
 
@@ -210,11 +214,10 @@ class StatusPill(QLabel):
         self.set_estado(texto, cor)
 
     def set_estado(self, texto: str, cor: str):
-        self.setText(f"  ●  {texto}")
+        self.setText(f"●  {texto}")
         self.setStyleSheet(
-            f"color: {cor}; font-size: 12px; font-weight: 700;"
-            f"background: {theme.PANEL}; border: 1px solid {theme.LINE};"
-            f"border-radius: 12px; padding: 5px 12px;")
+            f"color: {cor}; font-size: 11px; font-weight: 700;"
+            f"letter-spacing: 1px; background: transparent; padding: 4px 2px;")
 
 
 # --------------------------------------------------------------------------- #
@@ -229,8 +232,10 @@ class VideoView(QLabel):
                            QSizePolicy.Policy.Expanding)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setStyleSheet(
-            f"background: #000; border-radius: 12px; color: {theme.MUT};")
-        self.setText("Câmera desligada")
+            f"background: {theme.PANEL}; border: 1px solid {theme.LINE};"
+            f"border-radius: 14px; color: {theme.FAINT}; font-size: 12px;"
+            f"letter-spacing: 1px;")
+        self.setText("CÂMERA DESLIGADA")
 
     def set_frame(self, rgb: np.ndarray):
         h, w, _ = rgb.shape
@@ -250,14 +255,13 @@ class WaveformPlot(pg.PlotWidget):
 
     def __init__(self):
         super().__init__()
-        self.setBackground(theme.PANEL)
-        self.showGrid(x=True, y=True, alpha=0.15)
+        self.setBackground(theme.BG)
         self.setMenuEnabled(False)
         self.setMouseEnabled(False, False)
         self.hideButtons()
         self.getPlotItem().hideAxis("left")
         self.getPlotItem().hideAxis("bottom")
-        self._curve = self.plot(pen=pg.mkPen(theme.ACC, width=2))
+        self._curve = self.plot(pen=pg.mkPen(theme.ACC, width=1.6))
 
     def set_sinal(self, sig: np.ndarray, ok: bool):
         if sig is None or len(sig) < 2:
@@ -267,7 +271,7 @@ class WaveformPlot(pg.PlotWidget):
         s = s - s.mean()
         amp = np.max(np.abs(s)) or 1.0
         cor = theme.ACC if ok else theme.WARN
-        self._curve.setPen(pg.mkPen(cor, width=2))
+        self._curve.setPen(pg.mkPen(cor, width=1.6))
         self._curve.setData(s / amp)
         self.setYRange(-1.1, 1.1, padding=0)
 
@@ -277,18 +281,16 @@ class TrendPlot(pg.PlotWidget):
 
     def __init__(self):
         super().__init__()
-        self.setBackground(theme.PANEL)
-        self.showGrid(x=False, y=True, alpha=0.12)
+        self.setBackground(theme.BG)
         self.setMenuEnabled(False)
         self.setMouseEnabled(False, False)
         self.hideButtons()
         self.getPlotItem().hideAxis("bottom")
-        ax = self.getAxis("left")
-        ax.setTextPen(theme.MUT)
+        self.getPlotItem().hideAxis("left")
         self.setYRange(45, 150)
         self._curve = self.plot(
-            pen=pg.mkPen(theme.ACC, width=2),
-            fillLevel=45, brush=pg.mkBrush(150, 230, 130, 35))
+            pen=pg.mkPen(theme.ACC, width=1.6),
+            fillLevel=45, brush=pg.mkBrush(92, 240, 138, 22))
 
     def set_hist(self, hist):
         if not hist:

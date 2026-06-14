@@ -7,9 +7,9 @@ import time
 
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QKeySequence, QShortcut
-from PyQt6.QtWidgets import (QComboBox, QFileDialog, QGridLayout, QHBoxLayout,
-                             QLabel, QMainWindow, QMessageBox, QPushButton,
-                             QVBoxLayout, QWidget)
+from PyQt6.QtWidgets import (QComboBox, QFileDialog, QFrame, QGridLayout,
+                             QHBoxLayout, QLabel, QMainWindow, QMessageBox,
+                             QPushButton, QVBoxLayout, QWidget)
 
 from . import __app_name__, __version__, theme
 from .cameras import listar_cameras
@@ -40,13 +40,15 @@ class MainWindow(QMainWindow):
         root.setObjectName("root")
         self.setCentralWidget(root)
         outer = QVBoxLayout(root)
-        outer.setContentsMargins(20, 16, 20, 14)
-        outer.setSpacing(14)
+        outer.setContentsMargins(34, 26, 34, 20)
+        outer.setSpacing(22)
 
         outer.addLayout(self._build_header())
+        outer.addWidget(self._hairline())
 
         grid = QGridLayout()
-        grid.setSpacing(14)
+        grid.setHorizontalSpacing(34)
+        grid.setVerticalSpacing(22)
         grid.setColumnStretch(0, 5)
         grid.setColumnStretch(1, 4)
         grid.setColumnStretch(2, 4)
@@ -62,7 +64,7 @@ class MainWindow(QMainWindow):
         self.gauge = HeartGauge()
         hr_card.add(self.gauge)
         self.trend = TrendPlot()
-        self.trend.setFixedHeight(70)
+        self.trend.setFixedHeight(54)
         hr_card.add(self.trend)
         grid.addWidget(hr_card, 0, 1, 2, 1)
 
@@ -77,13 +79,20 @@ class MainWindow(QMainWindow):
 
         # validação (linha própria, fina) + pleth
         outer.addWidget(self.card_val)
+        outer.addWidget(self._hairline())
 
-        pleth_card = Card("PLETISMOGRAMA  (pulso óptico)")
+        pleth_card = Card("PLETISMOGRAMA")
         self.wave = WaveformPlot()
         pleth_card.add(self.wave)
         outer.addWidget(pleth_card, stretch=2)
 
         outer.addLayout(self._build_footer())
+
+    def _hairline(self):
+        ln = QFrame()
+        ln.setFixedHeight(1)
+        ln.setStyleSheet(f"background: {theme.LINE}; border: none;")
+        return ln
 
     def _build_header(self):
         h = QHBoxLayout()
