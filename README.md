@@ -14,8 +14,11 @@ gauge animado e gráficos em tempo real (pyqtgraph).
 ## Recursos
 
 ### Precisão & validação
-- **Ensemble de algoritmos** — **POS** (Wang 2017) + **CHROM** (de Haan 2013) +
-  canal verde, fundidos por peso de SNR.
+- **Ensemble de 5 algoritmos** — **POS** (Wang 2017, versão canônica com janela
+  deslizante + *overlap-add*) + **CHROM** (de Haan 2013) + **LGI** (Pilz 2018) +
+  **OMIT** (Álvarez-Casado & Bordallo-López 2023) + canal verde, fundidos por
+  peso de SNR. POS, LGI e OMIT são os métodos não-supervisionados de melhor
+  desempenho nos benchmarks rPPG-Toolbox (NeurIPS 2023) e pyVHR.
 - **Validação cruzada** — concordância entre os dois métodos de maior SNR.
 - **Verificação independente** — HR por **autocorrelação** confrontado com a FFT.
 - **Interpolação parabólica do pico** — precisão de BPM abaixo da resolução do bin.
@@ -65,6 +68,18 @@ e relativamente parado por ~8 s para a leitura estabilizar.
 | `theme.py` | Paleta e folha de estilo (QSS) |
 | `cameras.py` | Enumeração de câmeras |
 | `app.py` / `__main__.py` | Ponto de entrada |
+
+## Referências
+
+- Wang, W. et al. *Algorithmic Principles of Remote PPG (POS)*. IEEE TBME, 2017.
+- de Haan, G. & Jeanne, V. *Robust Pulse Rate from Chrominance-Based rPPG (CHROM)*.
+  IEEE TBME, 2013.
+- Pilz, C. S. et al. *Local Group Invariance for Heart Rate Estimation from Face
+  Videos (LGI)*. CVPRW, 2018.
+- Álvarez-Casado, C. & Bordallo-López, M. *Face2PPG (OMIT)*. IEEE JBHI, 2023.
+- Liu, X. et al. *rPPG-Toolbox: Deep Remote PPG Toolbox*. NeurIPS 2023.
+- Boccignone, G. et al. *pyVHR: a Python framework for remote photoplethysmography*.
+  PeerJ CS, 2022.
 
 ## ⚠️ Aviso
 

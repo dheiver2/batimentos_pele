@@ -1,9 +1,10 @@
 """
 Núcleo de processamento de sinal rPPG.
 
-Técnicas de precisão (idênticas à versão de referência):
-  - Ensemble POS (Wang 2017) + CHROM (de Haan 2013) + canal verde,
-    fundidos por peso de SNR.
+Técnicas de precisão:
+  - Ensemble de 5 métodos: POS canônico com overlap-add (Wang 2017),
+    CHROM (de Haan 2013), LGI (Pilz 2018), OMIT (Álvarez-Casado 2023) e
+    canal verde, fundidos por peso de SNR.
   - Validação cruzada entre métodos (concordância POS<->CHROM).
   - Verificação independente por autocorrelação.
   - Interpolação parabólica do pico espectral (precisão sub-bin).
@@ -89,14 +90,61 @@ def _normaliza(rgb):
     return C / mu
 
 
+_PROJ_POS = np.array([[0.0, 1.0, -1.0], [-2.0, 1.0, 1.0]])
+
+
 def pulso_pos(rgb, fs):
-    """POS (Plane-Orthogonal-to-Skin, Wang 2017)."""
-    Cn = _normaliza(rgb)
-    S1 = Cn[1] - Cn[2]
-    S2 = Cn[1] + Cn[2] - 2 * Cn[0]
-    s2s = np.std(S2)
-    alpha = np.std(S1) / s2s if s2s > 1e-8 else 0.0
-    return banda(detrend(S1 + alpha * S2), fs)
+    """
+    POS canônico com janela deslizante + overlap-add (Wang et al. 2017).
+
+    Em vez de projetar o sinal inteiro de uma vez, normaliza e projeta sobre
+    janelas curtas (~1.6 s) que se sobrepõem, reconstruindo o pulso por
+    soma sobreposta. Mais robusto a variações lentas de iluminação/movimento.
+    """
+    C = rgb.astype(float).T                       # (3, N)
+    n_amostras = C.shape[1]
+    w = max(int(1.6 * fs), 2)
+    H = np.zeros(n_amostras)
+    for n in range(w, n_amostras):
+        m = n - w + 1
+        Cn = C[:, m:n + 1]
+        mu = np.mean(Cn, axis=1, keepdims=True)
+        mu[mu == 0] = 1e-8
+        Cn = Cn / mu
+        S = _PROJ_POS @ Cn                        # (2, w)
+        s1, s2 = S[0], S[1]
+        sd2 = np.std(s2)
+        alpha = np.std(s1) / sd2 if sd2 > 1e-8 else 0.0
+        h = s1 + alpha * s2
+        H[m:n + 1] += (h - np.mean(h))
+    return banda(H, fs)
+
+
+def pulso_lgi(rgb, fs):
+    """LGI — Local Group Invariance (Pilz et al. 2018).
+
+    Projeta o RGB no complemento ortogonal da direção dominante (1º vetor
+    singular ≈ iluminação) e usa o canal verde resultante.
+    """
+    C = rgb.astype(float).T                       # (3, N)
+    U, _, _ = np.linalg.svd(C, full_matrices=True)
+    s = U[:, 0:1]                                 # direção dominante (3,1)
+    P = np.eye(3) - s @ s.T
+    Y = P @ C
+    return banda(detrend(Y[1]), fs)
+
+
+def pulso_omit(rgb, fs):
+    """OMIT — Orthogonal Matrix Image Transformation
+    (Álvarez-Casado & Bordallo-López 2023). Usa a decomposição QR para obter
+    a base ortogonal e projeta no complemento da 1ª componente.
+    """
+    C = rgb.astype(float).T                       # (3, N)
+    Q, _ = np.linalg.qr(C)                        # Q (3,3)
+    s = Q[:, 0:1]
+    P = np.eye(3) - s @ s.T
+    Y = P @ C
+    return banda(detrend(Y[1]), fs)
 
 
 def pulso_chrom(rgb, fs):
@@ -179,6 +227,8 @@ def estima_ensemble(rgb_u, fs) -> Estimativa:
     metodos = {
         "POS": pulso_pos(rgb_u, fs),
         "CHROM": pulso_chrom(rgb_u, fs),
+        "LGI": pulso_lgi(rgb_u, fs),
+        "OMIT": pulso_omit(rgb_u, fs),
         "GREEN": pulso_verde(rgb_u, fs),
     }
     est: Dict[str, dict] = {}
