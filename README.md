@@ -54,13 +54,6 @@ python3 -m vitalscan
 Escolha a câmera, clique **Iniciar** (ou `Espaço`) e mantenha o rosto bem iluminado
 e relativamente parado por ~8 s para a leitura estabilizar.
 
-### Versões de linha de comando (legado)
-
-```bash
-python3 rppg_pos.py        # dashboard renderizado em OpenCV
-python3 batimentos_pele.py # versão simples (canal verde) p/ comparação
-```
-
 ## Arquitetura (`vitalscan/`)
 
 | Módulo | Responsabilidade |
@@ -72,15 +65,6 @@ python3 batimentos_pele.py # versão simples (canal verde) p/ comparação
 | `theme.py` | Paleta e folha de estilo (QSS) |
 | `cameras.py` | Enumeração de câmeras |
 | `app.py` / `__main__.py` | Ponto de entrada |
-
-## Arquivos (legado)
-
-| Arquivo | Descrição |
-|---|---|
-| `rppg_pos.py` | Dashboard rPPG renderizado em OpenCV |
-| `batimentos_pele.py` | Versão simples (média do canal verde) |
-| `roteiro_reels.md` | Roteiro de vídeo (Reels/TikTok) do projeto |
-| `requirements.txt` | Dependências |
 
 ## ⚠️ Aviso
 
