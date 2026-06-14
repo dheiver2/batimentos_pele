@@ -93,3 +93,15 @@ para diagnóstico ou decisões de saúde.
 ## Licença
 
 MIT
+
+## Atalho na Área de Trabalho (macOS)
+
+Gere o app com ícone (coração + ECG) na Área de Trabalho:
+
+```bash
+python3 scripts/make_icon.py     # gera assets/VitalScan.icns
+bash scripts/build_app.sh         # cria ~/Desktop/VitalScan.app
+```
+
+Duplo-clique no **VitalScan.app**. Na primeira abertura, se o Gatekeeper avisar,
+use **botão direito → Abrir**. O macOS pedirá permissão de câmera.
