@@ -22,8 +22,11 @@ gauge animado e gráficos em tempo real (pyqtgraph).
 - **Validação cruzada** — concordância entre os dois métodos de maior SNR.
 - **Verificação independente** — HR por **autocorrelação** confrontado com a FFT.
 - **Interpolação parabólica do pico** — precisão de BPM abaixo da resolução do bin.
+- **Face landmarks de alta precisão** — MediaPipe Face Mesh (478 pontos 3D)
+  define ROIs de pele que acompanham o rosto pixel a pixel; *fallback*
+  automático para detector Haar se o MediaPipe não estiver disponível.
 - **Máscara de pele (YCrCb)** — média só sobre pixels de pele dentro das ROIs.
-- **Múltiplas ROIs** — testa + duas bochechas, combinadas.
+- **Múltiplas ROIs** — testa + duas bochechas, recortadas pelos landmarks.
 - **Reamostragem uniforme** — corrige a amostragem irregular da webcam antes da FFT.
 - **Rejeição de movimento** — descarta frames com salto brusco da ROI.
 - **Suavização com rejeição de outliers** — mediana temporal + rastreamento da face (EMA).
@@ -63,6 +66,7 @@ e relativamente parado por ~8 s para a leitura estabilizar.
 |---|---|
 | `dsp.py` | Núcleo de sinal (POS/CHROM/verde, ensemble, SQI) — puro, sem UI |
 | `worker.py` | `QThread` de captura + processamento; emite `Amostra` por frame |
+| `landmarks.py` | Face Mesh (478 landmarks) → ROIs de pele precisas; fallback Haar |
 | `widgets.py` | Widgets customizados (gauge, cards, plots, vídeo) |
 | `main_window.py` | Janela principal, layout e controles |
 | `theme.py` | Paleta e folha de estilo (QSS) |

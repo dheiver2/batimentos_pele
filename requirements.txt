@@ -3,3 +3,4 @@ scipy>=1.7
 opencv-python>=4.5
 PyQt6>=6.4
 pyqtgraph>=0.13
+mediapipe>=0.10   # face landmarks (478 pts); fallback p/ Haar se ausente

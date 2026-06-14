@@ -264,7 +264,8 @@ class MainWindow(QMainWindow):
             self.pill.set_estado("AJUSTANDO", theme.ACC_B)
 
         rec = "  ·  REC" if (self.worker and self.worker.gravando()) else ""
-        self.lbl_fps.setText(f"{a.fps:.0f} fps{rec}")
+        modo = self.worker.modo_deteccao if self.worker else ""
+        self.lbl_fps.setText(f"{modo}  ·  {a.fps:.0f} fps{rec}")
 
     def on_erro(self, msg: str):
         QMessageBox.critical(self, "Erro de câmera", msg)

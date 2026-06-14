@@ -17,7 +17,7 @@ import cv2
 import numpy as np
 from PyQt6.QtCore import QThread, pyqtSignal
 
-from . import dsp
+from . import dsp, landmarks
 from .dsp import Estimativa
 
 JANELA_SEG = 8
@@ -54,6 +54,12 @@ class RppgWorker(QThread):
         self._registros: List[list] = []
         self._face_cascade = cv2.CascadeClassifier(
             cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+        self._malha = None                # FaceLandmarker (lazy, no run())
+        self.usando_landmarks = False     # informativo p/ UI
+
+    @property
+    def modo_deteccao(self) -> str:
+        return "Face Mesh (478 landmarks)" if self.usando_landmarks else "Haar"
 
     # ---- controle externo (thread-safe o suficiente p/ flags simples) ----
 
@@ -97,6 +103,9 @@ class RppgWorker(QThread):
         fps = 0.0
         t_prev = time.time()
 
+        # landmarks de alta precisão (fallback p/ Haar se indisponível)
+        self._malha = landmarks.MalhaFacial.criar()
+        self.usando_landmarks = self._malha is not None
         self._rodando = True
         self.estado.emit("Mantenha o rosto iluminado e parado por ~8 s.")
 
@@ -107,41 +116,58 @@ class RppgWorker(QThread):
                 break
 
             frame = cv2.flip(frame, 1)
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            faces = self._face_cascade.detectMultiScale(
-                gray, 1.3, 5, minSize=(120, 120))
+            rgb = None
 
-            if len(faces):
-                det = max(faces, key=lambda f: f[2] * f[3]).astype(float)
-                box = det if box is None else 0.6 * box + 0.4 * det
-                sem_rosto = 0
+            if self._malha is not None:
+                # ---- caminho de alta precisão: Face Mesh ----
+                ts_ms = int((time.time() - t0) * 1000)
+                pontos = self._malha.detecta(frame, ts_ms)
+                if pontos is not None:
+                    sem_rosto = 0
+                    landmarks.desenha(frame, pontos)
+                    rgb = landmarks.extrai_rgb(frame, pontos)
+                    tem_rosto = True
+                else:
+                    sem_rosto += 1
+                    tem_rosto = sem_rosto <= 30
             else:
-                sem_rosto += 1
-                if sem_rosto > 30:
-                    box = None
+                # ---- fallback: Haar + ROIs por proporção ----
+                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                faces = self._face_cascade.detectMultiScale(
+                    gray, 1.3, 5, minSize=(120, 120))
+                if len(faces):
+                    det = max(faces, key=lambda f: f[2] * f[3]).astype(float)
+                    box = det if box is None else 0.6 * box + 0.4 * det
+                    sem_rosto = 0
+                else:
+                    sem_rosto += 1
+                    if sem_rosto > 30:
+                        box = None
+                tem_rosto = box is not None
+                if tem_rosto:
+                    x, y, w, h = box.astype(int)
+                    cv2.rectangle(frame, (x, y), (x + w, y + h), (70, 160, 200), 1)
+                    rois = [
+                        (x + int(w * 0.30), y + int(h * 0.07), int(w * 0.40), int(h * 0.18)),
+                        (x + int(w * 0.12), y + int(h * 0.55), int(w * 0.22), int(h * 0.22)),
+                        (x + int(w * 0.66), y + int(h * 0.55), int(w * 0.22), int(h * 0.22)),
+                    ]
+                    medias = []
+                    for (rx, ry, rw, rh) in rois:
+                        cv2.rectangle(frame, (rx, ry), (rx + rw, ry + rh),
+                                      (150, 220, 130), 1)
+                        m = dsp.media_roi(frame, rx, ry, rw, rh)
+                        if m is not None:
+                            medias.append(m)
+                    if medias:
+                        rgb = np.mean(medias, axis=0)
 
-            tem_rosto = box is not None
-            if tem_rosto:
-                x, y, w, h = box.astype(int)
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (70, 160, 200), 1)
-                rois = [
-                    (x + int(w * 0.30), y + int(h * 0.07), int(w * 0.40), int(h * 0.18)),
-                    (x + int(w * 0.12), y + int(h * 0.55), int(w * 0.22), int(h * 0.22)),
-                    (x + int(w * 0.66), y + int(h * 0.55), int(w * 0.22), int(h * 0.22)),
-                ]
-                medias = []
-                for (rx, ry, rw, rh) in rois:
-                    cv2.rectangle(frame, (rx, ry), (rx + rw, ry + rh),
-                                  (150, 220, 130), 1)
-                    m = dsp.media_roi(frame, rx, ry, rw, rh)
-                    if m is not None:
-                        medias.append(m)
-                if medias:
-                    rgb = np.mean(medias, axis=0)
-                    if verde_ant is None or abs(rgb[1] - verde_ant) < 8.0:
-                        rgb_buf.append(rgb)
-                        t_buf.append(time.time() - t0)
-                    verde_ant = rgb[1]
+            # acumula RGB com rejeição de artefato de movimento
+            if rgb is not None:
+                if verde_ant is None or abs(rgb[1] - verde_ant) < 8.0:
+                    rgb_buf.append(rgb)
+                    t_buf.append(time.time() - t0)
+                verde_ant = rgb[1]
 
             # estimativa quando há histórico suficiente
             if len(rgb_buf) >= int(dsp.FS_ALVO * 4):
