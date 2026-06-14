@@ -3,9 +3,11 @@
 Mede a **frequência cardíaca pela webcam**, sem nenhum sensor de contato, detectando
 a variação sutil da cor da pele a cada batimento (**fotopletismografia remota — rPPG**).
 
-A versão principal (`rppg_pos.py`) implementa o algoritmo **POS**
-(*Plane-Orthogonal-to-Skin*, Wang et al., IEEE TBME 2017) e exibe os resultados
-numa interface no estilo de **monitor de sinais vitais hospitalar**.
+O **app desktop `vitalscan`** (PyQt6) implementa o algoritmo **POS**
+(*Plane-Orthogonal-to-Skin*, Wang et al., IEEE TBME 2017) num ensemble com CHROM
+e canal verde, exibindo os resultados numa interface no estilo de
+**monitor de sinais vitais hospitalar**, com captura em thread dedicada,
+gauge animado e gráficos em tempo real (pyqtgraph).
 
 ![monitor](docs/preview.png)
 
@@ -24,11 +26,16 @@ numa interface no estilo de **monitor de sinais vitais hospitalar**.
 - **Suavização com rejeição de outliers** — mediana temporal + rastreamento da face (EMA).
 - **SQI composto** — combina SNR + concordância de métodos + concordância FFT/autocorr.
 
-### Interface (UI/UX comercial)
-- Dashboard "VitalScan": cartões arredondados, anel de progresso da FC, coração
-  pulsante, barra de qualidade, sparkline de tendência e painel de validação.
-- **Métricas exibidas** — BPM, SQI (%), HRV (SDNN, ms) e status de validação.
-- **Gravação CSV** — tecla `r` grava `t, bpm, snr, sqi, hrv, bpm_autocorr`.
+### App desktop (PyQt6)
+- **Interface nativa** "VitalScan": cards arredondados, **gauge circular animado**
+  da FC com coração pulsante em sincronia com a batida, barra de qualidade,
+  gráfico de **tendência** e **pletismograma ao vivo** (pyqtgraph).
+- **Captura em thread separada** (`QThread`) — a UI nunca trava.
+- **Seleção de câmera** no cabeçalho + **status ao vivo** (sem rosto / calibrando /
+  sinal OK / ajustando) e **FPS**.
+- **Métricas exibidas** — BPM, SQI (%), HRV (SDNN, ms) e painel de validação cruzada.
+- **Gravação CSV** com diálogo de salvar — grava `t, bpm, snr, sqi, hrv, bpm_autocorr`.
+- **Atalhos** — `Espaço` inicia/para · `R` grava · `Q` fecha.
 
 ## Instalação
 
@@ -38,20 +45,39 @@ pip3 install -r requirements.txt
 
 ## Uso
 
+### App desktop (recomendado)
+
 ```bash
-python3 rppg_pos.py        # versão científica + monitor médico
+python3 -m vitalscan
+```
+
+Escolha a câmera, clique **Iniciar** (ou `Espaço`) e mantenha o rosto bem iluminado
+e relativamente parado por ~8 s para a leitura estabilizar.
+
+### Versões de linha de comando (legado)
+
+```bash
+python3 rppg_pos.py        # dashboard renderizado em OpenCV
 python3 batimentos_pele.py # versão simples (canal verde) p/ comparação
 ```
 
-Teclas: **`q`** sai · **`r`** liga/desliga a gravação CSV.
+## Arquitetura (`vitalscan/`)
 
-Mantenha o rosto bem iluminado e relativamente parado por ~8 s para a leitura estabilizar.
+| Módulo | Responsabilidade |
+|---|---|
+| `dsp.py` | Núcleo de sinal (POS/CHROM/verde, ensemble, SQI) — puro, sem UI |
+| `worker.py` | `QThread` de captura + processamento; emite `Amostra` por frame |
+| `widgets.py` | Widgets customizados (gauge, cards, plots, vídeo) |
+| `main_window.py` | Janela principal, layout e controles |
+| `theme.py` | Paleta e folha de estilo (QSS) |
+| `cameras.py` | Enumeração de câmeras |
+| `app.py` / `__main__.py` | Ponto de entrada |
 
-## Arquivos
+## Arquivos (legado)
 
 | Arquivo | Descrição |
 |---|---|
-| `rppg_pos.py` | Versão principal: POS + monitor médico |
+| `rppg_pos.py` | Dashboard rPPG renderizado em OpenCV |
 | `batimentos_pele.py` | Versão simples (média do canal verde) |
 | `roteiro_reels.md` | Roteiro de vídeo (Reels/TikTok) do projeto |
 | `requirements.txt` | Dependências |
