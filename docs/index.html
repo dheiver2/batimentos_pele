@@ -135,7 +135,32 @@
     color:var(--faint);font-size:13px}
   footer a{color:var(--mut)}
 
+  /* gallery em uso */
+  .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .ushot{border:1px solid var(--line);border-radius:14px;overflow:hidden;
+    background:var(--panel);transition:.2s}
+  .ushot:hover{transform:translateY(-4px);border-color:#2a2a2a}
+  .ushot img{display:block;width:100%}
+  .ushot .cap{padding:16px 18px}
+  .ushot .cap b{font-size:14px;display:block;margin-bottom:3px}
+  .ushot .cap span{font-size:13px;color:var(--mut);font-weight:300}
+
+  /* personas / depoimentos */
+  .people-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+  .quote{background:var(--panel);border:1px solid var(--line);
+    border-radius:16px;padding:26px;transition:.2s}
+  .quote:hover{border-color:#2a2a2a;background:var(--panel2)}
+  .quote p{font-size:15px;color:#d6d6d6;font-weight:300;font-style:italic;
+    line-height:1.7}
+  .who{display:flex;align-items:center;gap:13px;margin-top:20px}
+  .who img{width:46px;height:46px;border-radius:50%;object-fit:cover;
+    border:1px solid var(--line)}
+  .who b{font-size:14px;display:block}
+  .who span{font-size:12px;color:var(--mut)}
+  .stars{color:var(--acc);font-size:13px;letter-spacing:2px;margin-bottom:14px}
+
   @media(max-width:820px){
+    .gallery,.people-grid{grid-template-columns:1fr}
     .grid,.steps,.stats{grid-template-columns:1fr 1fr}
     .split{grid-template-columns:1fr;gap:28px}
     .nav-links{display:none}
@@ -151,6 +176,7 @@
     <div class="nav-links">
       <a href="#recursos">Recursos</a>
       <a href="#como">Como funciona</a>
+      <a href="#emuso">Em uso</a>
       <a href="#ciencia">Tecnologia</a>
       <a href="#contato">Contato</a>
     </div>
@@ -263,6 +289,65 @@
       <span class="pill"><b>LGI</b> · Pilz 2018</span>
       <span class="pill"><b>OMIT</b> · Álvarez-Casado 2023</span>
       <span class="pill">Benchmarks <b>rPPG-Toolbox</b> · <b>pyVHR</b></span>
+    </div>
+  </div>
+</section>
+
+<section id="emuso">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Em uso</span>
+      <h2>Pessoas medindo em segundos</h2>
+      <p>O rosto enquadrado, as regiões de pele detectadas automaticamente e a
+        leitura confirmada — em três cenários reais.</p>
+    </div>
+    <div class="gallery">
+      <div class="ushot"><img src="people/inuse-1.png" alt="Pessoa usando o VitalScan em telemedicina">
+        <div class="cap"><b>Telemedicina</b><span>Triagem rápida durante a teleconsulta.</span></div></div>
+      <div class="ushot"><img src="people/inuse-2.png" alt="Pessoa usando o VitalScan em bem-estar">
+        <div class="cap"><b>Bem-estar &amp; RH</b><span>Check-in de saúde no dia a dia da equipe.</span></div></div>
+      <div class="ushot"><img src="people/inuse-3.png" alt="Pessoa usando o VitalScan em pesquisa">
+        <div class="cap"><b>Pesquisa &amp; UX</b><span>Coleta sem contato em estudos com usuários.</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="depoimentos">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Para quem é · cenários ilustrativos</span>
+      <h2>Quem se beneficia</h2>
+      <p>Personas que representam aplicações típicas da medição de pulso sem contato.</p>
+    </div>
+    <div class="people-grid">
+      <div class="quote">
+        <div class="stars">★★★★★</div>
+        <p>“Consigo registrar a frequência cardíaca do paciente sem pedir nenhum
+          equipamento em casa. Agiliza muito a teleconsulta.”</p>
+        <div class="who"><img src="people/w44.jpg" alt="">
+          <div><b>Dra. Marina Alves</b><span>Médica · Telemedicina</span></div></div>
+      </div>
+      <div class="quote">
+        <div class="stars">★★★★★</div>
+        <p>“Integramos ao nosso programa de bem-estar. A leitura de qualidade do
+          sinal dá confiança nos números que mostramos aos colaboradores.”</p>
+        <div class="who"><img src="people/m32.jpg" alt="">
+          <div><b>Rafael Lima</b><span>Gestor de RH · Saúde corporativa</span></div></div>
+      </div>
+      <div class="quote">
+        <div class="stars">★★★★★</div>
+        <p>“Para estudos de UX, medir o pulso sem encostar no participante elimina
+          uma variável enorme. O CSV cai direto na nossa análise.”</p>
+        <div class="who"><img src="people/w68.jpg" alt="">
+          <div><b>Camila Souza</b><span>Pesquisadora · Experiência do usuário</span></div></div>
+      </div>
+      <div class="quote">
+        <div class="stars">★★★★★</div>
+        <p>“O ensemble de algoritmos e a validação cruzada foram decisivos: vejo
+          quando a leitura é confiável e quando não é.”</p>
+        <div class="who"><img src="people/m44.jpg" alt="">
+          <div><b>Eng. Bruno Carvalho</b><span>Líder técnico · Health tech</span></div></div>
+      </div>
     </div>
   </div>
 </section>
